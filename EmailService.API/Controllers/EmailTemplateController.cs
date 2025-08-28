@@ -37,14 +37,14 @@ public class EmailTemplateController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, EmailTemplate updated)
+    public async Task<IActionResult> Update(Guid id, EmailTemplate updated)
     {
         bool success = await _service.UpdateAsync(id, updated);
         return success ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         bool success = await _service.DeleteAsync(id);
         return success ? NoContent() : NotFound();

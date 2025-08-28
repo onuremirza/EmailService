@@ -1,8 +1,5 @@
 using EmailService.Application;
-using EmailService.Domain.Entities;
 using EmailService.Infrastructure;
-using EmailService.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 
@@ -41,15 +38,6 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
-
-// Database
-builder.Services.AddDbContext<EmailDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("EmailDb")));
-
-// SMTP Config from appsettings.json
-builder.Services.Configure<SmtpConfig>(
-    builder.Configuration.GetSection("Smtp"));
 
 // Config Cache
 builder.Services.AddMemoryCache();

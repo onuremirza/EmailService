@@ -1,38 +1,39 @@
 ﻿using EmailService.Application.Interfaces;
 using EmailService.Domain.ValueObjects;
-using EmailService.Infrastructure.Messaging;
+using EmailService.Infrastructure.Interfaces;
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 
 namespace EmailService.Application.Services;
 
-public class EmailQueuePublisher : IEmailQueuePublisher
+public sealed class EmailQueuePublisher : IEmailQueuePublisher
 {
-    private readonly IModel _channel;
-    private readonly string _queueName = "email.send.queue";
+    private readonly IRabbitMqConnection _connection;
+    private const string Exchange = "email";
+    private const string QueueName = "email.send.queue";
+    private const string RoutingKey = "email.send";
 
-    public EmailQueuePublisher(RabbitMqConnection connection)
+    public EmailQueuePublisher(IRabbitMqConnection connection)
     {
-        _channel = connection.CreateChannel();
-
-        _ = _channel.QueueDeclare(
-            queue: _queueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null
-        );
+        _connection = connection;
     }
 
     public Task PublishBatchAsync(EmailBatchMessage batch)
     {
-        IBasicProperties properties = _channel.CreateBasicProperties();
-        properties.Persistent = true;
+        _connection.Connect();
+        using IModel channel = _connection.CreateChannel();
 
-        foreach (var recipient in batch.Recipients)
+        channel.ExchangeDeclare(Exchange, ExchangeType.Direct, durable: true, autoDelete: false, arguments: null);
+        channel.QueueDeclare(QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+        channel.QueueBind(QueueName, Exchange, RoutingKey);
+
+        IBasicProperties props = channel.CreateBasicProperties();
+        props.Persistent = true;
+
+        foreach (EmailRecipientMessage recipient in batch.Recipients)
         {
-            var message = new EmailMessage
+            EmailMessage message = new EmailMessage
             {
                 To = recipient.To,
                 Subject = batch.Subject,
@@ -43,13 +44,7 @@ public class EmailQueuePublisher : IEmailQueuePublisher
             };
 
             byte[] body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-
-            _channel.BasicPublish(
-                exchange: "",
-                routingKey: _queueName,
-                basicProperties: properties,
-                body: body
-            );
+            channel.BasicPublish(Exchange, RoutingKey, props, body);
         }
 
         return Task.CompletedTask;

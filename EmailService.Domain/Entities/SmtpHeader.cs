@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace EmailService.Domain.Entities;
+﻿namespace EmailService.Domain.Entities;
 
 public class SmtpHeader
 {
@@ -9,6 +7,5 @@ public class SmtpHeader
     public string Value { get; set; } = null!;
 
     public Guid SmtpConfigId { get; set; }
-    [JsonIgnore]
     public SmtpConfig SmtpConfig { get; set; } = null!;
 }

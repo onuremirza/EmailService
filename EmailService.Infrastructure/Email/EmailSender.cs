@@ -1,6 +1,7 @@
 ﻿using EmailService.Domain.Entities;
 using EmailService.Domain.ValueObjects;
 using EmailService.Infrastructure.Interfaces;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 
@@ -16,21 +17,23 @@ public class EmailSender : IEmailSender, IDisposable
     private readonly bool _supportsHtml;
     private readonly ITemplateRenderer _renderer;
 
-    public EmailSender(SmtpConfig config, ITemplateRenderer renderer)
+    public EmailSender(IOptions<SmtpConfig> config, ITemplateRenderer renderer)
     {
-        _client = new SmtpClient(config.Host, config.Port)
+        SmtpConfig cfg = config.Value;
+
+        _client = new SmtpClient(cfg.Host, cfg.Port)
         {
-            EnableSsl = config.EnableSsl,
+            EnableSsl = cfg.EnableSsl,
             UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(config.Username, config.Password),
-            Timeout = config.Timeout
+            Credentials = new NetworkCredential(cfg.Username, cfg.Password),
+            Timeout = cfg.Timeout
         };
 
-        _from = config.From;
-        _fromName = config.FromName;
-        _unsubscribeUrl = config.UnsubscribeUrl;
-        _headers = config.Headers.AsReadOnly();
-        _supportsHtml = config.SupportsHtml;
+        _from = cfg.From;
+        _fromName = cfg.FromName;
+        _unsubscribeUrl = cfg.UnsubscribeUrl;
+        _headers = cfg.Headers.AsReadOnly();
+        _supportsHtml = cfg.SupportsHtml;
         _renderer = renderer;
     }
 

@@ -6,6 +6,7 @@ using EmailService.Infrastructure.Interfaces;
 using EmailService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 public class EmailProcessor : IEmailProcessor
 {
@@ -76,13 +77,12 @@ public class EmailProcessor : IEmailProcessor
             );
         }
 
-
         bool success = false;
         string? error = null;
 
         try
         {
-            using EmailSender sender = new(smtp, _renderer);
+            using EmailSender sender = new(Options.Create(smtp), _renderer);
             await sender.SendAsync(message, body, subject);
             success = true;
             _logger.LogInformation("Email sent to {Recipient}", message.To);

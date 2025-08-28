@@ -1,4 +1,5 @@
-﻿using EmailService.Infrastructure.Email;
+﻿using EmailService.Domain.Entities;
+using EmailService.Infrastructure.Email;
 using EmailService.Infrastructure.Interfaces;
 using EmailService.Infrastructure.Messaging;
 using EmailService.Infrastructure.Persistence;
@@ -12,14 +13,16 @@ public static class Register
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        _ = services.AddDbContext<EmailDbContext>(options =>
-        {
-            _ = options.UseNpgsql(configuration.GetConnectionString("EmailDB"));
-        });
+        services.AddDbContext<EmailDbContext>(o =>
+            o.UseNpgsql(configuration.GetConnectionString("EmailDb")));
 
-        _ = services.AddSingleton<ITemplateRenderer, TemplateRenderer>();
-        _ = services.AddScoped<IEmailSender, EmailSender>();
-        _ = services.AddScoped<IRabbitMqConnection, RabbitMqConnection>();
+        services.Configure<SmtpConfig>(configuration.GetSection("Smtp"));
+        services.Configure<RabbitMqConfig>(configuration.GetSection("RabbitMq"));
+
+
+        services.AddSingleton<ITemplateRenderer, TemplateRenderer>();
+        services.AddScoped<IEmailSender, EmailSender>();
+        services.AddSingleton<IRabbitMqConnection, RabbitMqConnection>();
 
         return services;
     }
