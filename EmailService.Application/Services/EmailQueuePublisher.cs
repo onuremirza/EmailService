@@ -21,7 +21,6 @@ public sealed class EmailQueuePublisher : IEmailQueuePublisher
 
     public Task PublishBatchAsync(EmailBatchMessage batch)
     {
-        _connection.Connect();
         using IModel channel = _connection.CreateChannel();
 
         channel.ExchangeDeclare(Exchange, ExchangeType.Direct, durable: true, autoDelete: false, arguments: null);

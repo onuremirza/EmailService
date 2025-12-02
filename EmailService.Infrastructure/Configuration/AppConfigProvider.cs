@@ -35,20 +35,20 @@ public class AppConfigProvider : IAppConfigProvider
             });
     }
 
-    public Task<RabbitMqConfig> GetRabbitMqSettingsAsync()
+    public Task<RabbitMqOptions> GetRabbitMqSettingsAsync()
     {
         return _cache.GetOrCreateAsync("rabbitmq", async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
-                RabbitMqConfig entity = await _db.RabbitMqConfigs.FirstAsync(x => x.IsActive);
-                return new RabbitMqConfig
+                RabbitMqOptions entity = await _db.RabbitMqOptions.FirstAsync(x => x.IsActive);
+                return new RabbitMqOptions
                 {
                     Host = entity.Host,
                     Port = entity.Port,
                     Username = entity.Username,
                     Password = entity.Password,
                     Exchange = entity.Exchange,
-                    QueueName = entity.QueueName,
+                    Queue = entity.Queue,
                     RoutingKey = entity.RoutingKey
                 };
             });

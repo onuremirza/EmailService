@@ -36,7 +36,7 @@ public class EmailTemplateController : ControllerBase
         return CreatedAtAction(nameof(GetByCode), new { code = created.Code }, created);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, EmailTemplate updated)
     {
         bool success = await _service.UpdateAsync(id, updated);

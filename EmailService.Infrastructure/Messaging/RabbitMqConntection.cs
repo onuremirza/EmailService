@@ -5,53 +5,43 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
 namespace EmailService.Infrastructure.Messaging;
-public class RabbitMqConnection : IRabbitMqConnection
+
+public sealed class RabbitMqConnection : IRabbitMqConnection
 {
-    private IConnection? _connection;
-    private readonly ConnectionFactory _factory;
+    private readonly IConnection _connection;
     private readonly ILogger<RabbitMqConnection> _logger;
 
-    public RabbitMqConnection(
-        IOptions<RabbitMqConfig> options,
-        ILogger<RabbitMqConnection> logger)
+    public RabbitMqConnection(IOptions<RabbitMqOptions> options, ILogger<RabbitMqConnection> logger)
     {
         _logger = logger;
-        _factory = new ConnectionFactory
+        RabbitMqOptions cfg = options.Value;
+
+        ConnectionFactory factory = new ConnectionFactory
         {
-            HostName = options.Value.Host,
-            Port = options.Value.Port,
-            UserName = options.Value.Username,
-            Password = options.Value.Password
+            HostName = cfg.Host,
+            Port = cfg.Port,
+            VirtualHost = cfg.VirtualHost,
+            UserName = cfg.Username,
+            Password = cfg.Password,
+            DispatchConsumersAsync = true
         };
+
+        _connection = factory.CreateConnection();
+        _logger.LogInformation("RabbitMQ connected to {Host}:{Port}/{VHost}", cfg.Host, cfg.Port, cfg.VirtualHost);
     }
 
-    public void Connect()
-    {
-        _connection ??= _factory.CreateConnection("EmailService");
-        _logger.LogInformation("RabbitMQ connected to {Host}:{Port}", _factory.HostName, _factory.Port);
-    }
+    public bool IsConnected => _connection.IsOpen;
 
     public IModel CreateChannel()
     {
-        return _connection is null || !_connection.IsOpen
-            ? throw new InvalidOperationException("RabbitMQ connection is not established.")
-            : _connection.CreateModel();
+        if (!IsConnected) throw new InvalidOperationException("RabbitMQ connection is not established.");
+        IModel channel = _connection.CreateModel();
+        return channel;
     }
 
     public void Dispose()
     {
-        try
-        {
-            if (_connection?.IsOpen == true)
-            {
-                _connection.Close();
-            }
-
-            _connection?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while disposing RabbitMQ connection.");
-        }
+        try { _connection.Close(); } catch { /* noop */ }
+        _connection.Dispose();
     }
 }

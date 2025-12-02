@@ -17,7 +17,7 @@ public static class Register
             o.UseNpgsql(configuration.GetConnectionString("EmailDb")));
 
         services.Configure<SmtpConfig>(configuration.GetSection("Smtp"));
-        services.Configure<RabbitMqConfig>(configuration.GetSection("RabbitMq"));
+        services.Configure<RabbitMqOptions>(configuration.GetSection("RabbitMq"));
 
 
         services.AddSingleton<ITemplateRenderer, TemplateRenderer>();

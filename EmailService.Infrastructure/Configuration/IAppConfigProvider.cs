@@ -5,5 +5,5 @@ namespace EmailService.Infrastructure.Configuration;
 public interface IAppConfigProvider
 {
     Task<SmtpConfig> GetSmtpSettingsAsync();
-    Task<RabbitMqConfig> GetRabbitMqSettingsAsync();
+    Task<RabbitMqOptions> GetRabbitMqSettingsAsync();
 }

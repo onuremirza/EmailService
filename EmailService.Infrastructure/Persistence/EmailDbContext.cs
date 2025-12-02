@@ -11,7 +11,7 @@ public class EmailDbContext : DbContext
     public DbSet<SmtpConfig> SmtpConfigs => Set<SmtpConfig>();
     public DbSet<SmtpHeader> SmtpHeaders => Set<SmtpHeader>();
     public DbSet<SmtpUsageLog> SmtpUsageLogs => Set<SmtpUsageLog>();
-    public DbSet<RabbitMqConfig> RabbitMqConfigs => Set<RabbitMqConfig>();
+    public DbSet<RabbitMqOptions> RabbitMqOptions => Set<RabbitMqOptions>();
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
 }

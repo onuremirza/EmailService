@@ -1,9 +1,11 @@
-﻿using EmailService.Domain.Entities;
+﻿// EmailService.Infrastructure/Email/EmailSender.cs  (CHANGED: UTF8 encodings + HTML detection)
+using EmailService.Domain.Entities;
 using EmailService.Domain.ValueObjects;
 using EmailService.Infrastructure.Interfaces;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
+using System.Text;                                  // CHANGED
 
 namespace EmailService.Infrastructure.Email;
 
@@ -44,7 +46,9 @@ public class EmailSender : IEmailSender, IDisposable
             From = new MailAddress(_from, _fromName),
             Subject = subject,
             Body = body,
-            IsBodyHtml = _supportsHtml
+            SubjectEncoding = Encoding.UTF8,         // CHANGED
+            BodyEncoding = Encoding.UTF8,            // CHANGED
+            IsBodyHtml = _supportsHtml || LooksLikeHtml(body) // CHANGED
         };
 
         mail.To.Add(message.To);
@@ -58,6 +62,12 @@ public class EmailSender : IEmailSender, IDisposable
         }
 
         await _client.SendMailAsync(mail);
+    }
+
+    private static bool LooksLikeHtml(string s)
+    {
+        // CHANGED
+        return !string.IsNullOrWhiteSpace(s) && s.Contains('<') && s.Contains('>'); // CHANGED
     }
 
     public void Dispose()

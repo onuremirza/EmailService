@@ -54,13 +54,14 @@ public class EmailProcessor : IEmailProcessor
                 throw new InvalidOperationException("Template not found or inactive.");
             }
 
-            body = _renderer.Render(template.Body, message.Params ?? [], message.UnsubscribeToken);
-            subject = _renderer.Render(
-                !string.IsNullOrWhiteSpace(message.Subject) ? message.Subject : template.Subject,
-                message.Params ?? [],
-                null,
-                appendUnsubscribe: false
-            );
+            string? rawBody = !IsPlaceholderOrEmpty(template.Body) ? template.Body : message.Body;                  // CHANGED
+            if (string.IsNullOrWhiteSpace(rawBody))                                                           // CHANGED
+                throw new InvalidOperationException("Template body is empty and no message body provided.");   // CHANGED
+
+            body = _renderer.Render(rawBody!, message.Params ?? [], message.UnsubscribeToken);                 // CHANGED
+
+            string rawSubject = !string.IsNullOrWhiteSpace(message.Subject) ? message.Subject : template.Subject; // CHANGED
+            subject = _renderer.Render(rawSubject ?? string.Empty, message.Params ?? [], null, false);         // CHANGED
         }
         else
         {
@@ -69,12 +70,8 @@ public class EmailProcessor : IEmailProcessor
                 throw new InvalidOperationException("Subject is required when no template is provided.");
             }
 
-            body = "";
-            subject = _renderer.Render(
-                message.Subject,
-                message.Params ?? [],
-                message.UnsubscribeToken
-            );
+            body = message.Body ?? string.Empty;                                                               // CHANGED
+            subject = _renderer.Render(message.Subject, message.Params ?? [], message.UnsubscribeToken);
         }
 
         bool success = false;
@@ -105,5 +102,11 @@ public class EmailProcessor : IEmailProcessor
         smtp.LastUsedAt = DateTime.UtcNow;
 
         _ = await _db.SaveChangesAsync();
+    }
+
+    private static bool IsPlaceholderOrEmpty(string? s)
+    {
+        // CHANGED
+        return string.IsNullOrWhiteSpace(s) || s.Trim() == "..." || s.Trim().Equals("&hellip;", StringComparison.OrdinalIgnoreCase); // CHANGED
     }
 }
